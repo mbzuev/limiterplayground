@@ -9,6 +9,10 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9"/>
+        <PackageReference Include="Polly" Version="7.2.3" />
+        <PackageReference Include="Polly.Contrib.MutableBulkheadPolicy" Version="1.0.0" />
+        <PackageReference Include="prometheus-net" Version="8.0.1" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
     </ItemGroup>
 
@@ -17,5 +21,6 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
+
 
 </Project>
