@@ -1,31 +1,50 @@
-namespace LimitedStorage;
+using System.Collections.Concurrent;
 
 public class LatencySimulator
 {
-    // Constructor to set latency parameters
-    private readonly Random _random = new Random();
-    private double _mean;        // Mean of the distribution
-    private double _stdDev;      // Standard deviation of the distribution
-    // Constructor to set the distribution parameters
-    public LatencySimulator(double mean, double stdDev)
+    private const int BaseRPS = 100; // Base requests per second
+    private const int BaseLatencyMs = 100; // Base latency in milliseconds for 100 RPS
+    private const int MaxStoredRequests = 1000; // Maximum number of stored requests
+
+    private ConcurrentQueue<DateTime> requestTimes;
+
+    public LatencySimulator()
     {
-        _mean = mean;
-        _stdDev = stdDev;
+        requestTimes = new ConcurrentQueue<DateTime>();
     }
 
-    public void UpdateValues(double mean, double stdDev)
+    public TimeSpan GetAdjustedLatency()
     {
-        _mean = mean;
-        _stdDev = stdDev;
+        // Remove requests older than 1 second
+        var cutoffTime = DateTime.Now.AddSeconds(-1);
+        while (requestTimes.TryPeek(out DateTime oldestRequest) && oldestRequest < cutoffTime)
+        {
+            requestTimes.TryDequeue(out _);
+        }
+        requestTimes.Enqueue(DateTime.Now);
+
+        // Calculate the current requests per second (RPS)
+        int currentRPS = requestTimes.Count;
+
+        // Calculate the ratio of the current RPS to the base RPS
+        double rpsRatio = (double)currentRPS / BaseRPS;
+
+        // Adjust the latency proportionally based on the RPS ratio
+        int adjustedLatencyMs = (int)(BaseLatencyMs * rpsRatio);
+
+        // Create a TimeSpan representing the adjusted latency
+        return TimeSpan.FromMilliseconds(adjustedLatencyMs);
     }
 
-    public double GetLatency()
+    public void AddRequest()
     {
-        return _random.NextDouble();
-        // // Generate a random number from a normal distribution
-        // double randomNumber = _random.NextDouble();
-        // double simulatedLatency = _mean + _stdDev * Math.Sqrt(-2.0 * Math.Log(randomNumber)) * Math.Cos(2.0 * Math.PI * _random.NextDouble());
-        //
-        // return (int)Math.Round(simulatedLatency);
+        // Enforce a limit on the number of stored requests
+        while (requestTimes.Count >= MaxStoredRequests)
+        {
+            requestTimes.TryDequeue(out _);
+        }
+
+        // Add the current time to the request times queue
+        requestTimes.Enqueue(DateTime.Now);
     }
 }

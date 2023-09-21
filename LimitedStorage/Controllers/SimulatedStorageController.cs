@@ -10,18 +10,18 @@ public class SimulatedStorageController : ControllerBase
     private readonly ILogger<SimulatedStorageController> _logger;
     private readonly LatencySimulator _simulator;
 
-    public SimulatedStorageController(ILogger<SimulatedStorageController> logger)
+    public SimulatedStorageController(ILogger<SimulatedStorageController> logger, LatencySimulator simulator)
     {
         _logger = logger;
-        _simulator = new LatencySimulator(3,2);
+        _simulator = simulator;
     }
 
     [HttpGet("GetData")]
     public async Task<ActionResult> GetData()
     {
-        var latency = _simulator.GetLatency()*0.1;
+        var latency = _simulator.GetAdjustedLatency();
         Console.WriteLine($"Latency simulated={latency}");
-        await Task.Delay(TimeSpan.FromSeconds(latency));
-        return Ok();
+        await Task.Delay(latency);
+        return Ok("Here you go");
     }
 }

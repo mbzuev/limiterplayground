@@ -1,4 +1,4 @@
-using LimitedStorage;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +9,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<LatencySimulator>();
 var app = builder.Build();
+app.UseHttpMetrics(); // should be registered before ErrorHandling to proper error codes in metrics
+app.UseMetricServer(settings => settings.EnableOpenMetrics = false);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
