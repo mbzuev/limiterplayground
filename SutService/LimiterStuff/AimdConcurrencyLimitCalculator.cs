@@ -27,7 +27,7 @@ public class AimdConcurrencyLimitCalculator : IConcurrencyLimitCalculator
 	{
 		_lastRequests.Enqueue(roundTimeTrip);
 		TimeSpan[] requests = Array.Empty<TimeSpan>();
-		if (_lastRequests.Count >= 100)
+		if (_lastRequests.Count >= _settings.RecalculationRequestCount)
 		{
 			requests = _lastRequests.ToArray();
 			_lastRequests.Clear();
@@ -35,8 +35,7 @@ public class AimdConcurrencyLimitCalculator : IConcurrencyLimitCalculator
 		if (requests.Length == 0)
 			return currentLimit;
 
-		var percentile = CalculatePercentile(requests, 99);
-		
+		var percentile = CalculatePercentile(requests, _settings.TargetPercentile);
 		var newLimit = currentLimit;
 		if (percentile > _maxLatency)
 		{
@@ -45,6 +44,7 @@ public class AimdConcurrencyLimitCalculator : IConcurrencyLimitCalculator
 		else if (CorrectlyUtilized(currentLimit, inFlightRequests))
 			newLimit++;
 
+		Console.WriteLine($"percentile {_settings.TargetPercentile}: {percentile}. New limit={newLimit}");
 		var result =  Math.Min(_settings.MaxConcurrency, Math.Max(newLimit, _settings.MinConcurrency));
 		return result;
 	}
