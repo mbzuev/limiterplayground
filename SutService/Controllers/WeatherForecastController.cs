@@ -31,8 +31,9 @@ public class WeatherForecastController : ControllerBase
         {
             var limiter = _factory.Create(RecoSlaType.Bulk);
             // var storageUrl = "http://localhost:1234/SimulatedStorage/GetData";
+            // var result = await limiter.LimitReadAsync(async () => await _httpClient.GetAsync(storageUrl));
             var storageUrl = "http://mystorage/SimulatedStorage/GetData";
-            var result = await limiter.LimitReadAsync(async () => await _httpClient.GetAsync(storageUrl));
+            var result = await _httpClient.GetAsync(storageUrl);
             return result.IsSuccessStatusCode ? Ok("Good") : new BadRequestResult();
         }
         catch (TooManyRequestsException)

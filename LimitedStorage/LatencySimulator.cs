@@ -1,50 +1,44 @@
 using System.Collections.Concurrent;
 
+namespace LimitedStorage;
+
 public class LatencySimulator
 {
-    private const int BaseRPS = 100; // Base requests per second
+    private const int BaseRPS = 10; // Base requests per second
     private const int BaseLatencyMs = 100; // Base latency in milliseconds for 100 RPS
     private const int MaxStoredRequests = 1000; // Maximum number of stored requests
 
-    private ConcurrentQueue<DateTime> requestTimes;
-
-    public LatencySimulator()
-    {
-        requestTimes = new ConcurrentQueue<DateTime>();
-    }
+    private readonly ConcurrentQueue<DateTime> _requests = new();
 
     public TimeSpan GetAdjustedLatency()
     {
-        // Remove requests older than 1 second
-        var cutoffTime = DateTime.Now.AddSeconds(-1);
-        while (requestTimes.TryPeek(out DateTime oldestRequest) && oldestRequest < cutoffTime)
-        {
-            requestTimes.TryDequeue(out _);
-        }
-        requestTimes.Enqueue(DateTime.Now);
-
-        // Calculate the current requests per second (RPS)
-        int currentRPS = requestTimes.Count;
-
-        // Calculate the ratio of the current RPS to the base RPS
-        double rpsRatio = (double)currentRPS / BaseRPS;
-
-        // Adjust the latency proportionally based on the RPS ratio
-        int adjustedLatencyMs = (int)(BaseLatencyMs * rpsRatio);
-
-        // Create a TimeSpan representing the adjusted latency
+        RemoveOutdatedRequests();
+        var currentRps = _requests.Count;
+        var rpsRatio = (double)currentRps / BaseRPS;
+        var adjustedLatencyMs = BaseLatencyMs * rpsRatio;
         return TimeSpan.FromMilliseconds(adjustedLatencyMs);
+    }
+
+    private void RemoveOutdatedRequests()
+    {
+        var cutoffTime = DateTime.Now.AddSeconds(-1);
+        while (_requests.TryPeek(out DateTime oldestRequest) && oldestRequest < cutoffTime)
+        {
+            _requests.TryDequeue(out _);
+        }
+
+        _requests.Enqueue(DateTime.Now);
     }
 
     public void AddRequest()
     {
         // Enforce a limit on the number of stored requests
-        while (requestTimes.Count >= MaxStoredRequests)
+        while (_requests.Count >= MaxStoredRequests)
         {
-            requestTimes.TryDequeue(out _);
+            _requests.TryDequeue(out _);
         }
 
         // Add the current time to the request times queue
-        requestTimes.Enqueue(DateTime.Now);
+        _requests.Enqueue(DateTime.Now);
     }
 }

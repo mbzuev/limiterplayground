@@ -1,3 +1,4 @@
+using LimitedStorage;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
