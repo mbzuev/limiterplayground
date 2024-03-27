@@ -4,9 +4,7 @@ namespace SutService.LimiterStuff;
 
 public interface IStorageMetrics
 {
-    ITimer MeasureStorageRead();
-
-    ITimer MeasureStorageWrite(string tenant, string recoTypeSystemName, string instanceId);
+    ITimer MeasureStorageCall();
 
     IDisposable RecordStorageRequest();
 

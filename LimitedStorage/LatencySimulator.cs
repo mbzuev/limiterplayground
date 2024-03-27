@@ -1,44 +1,24 @@
 using System.Collections.Concurrent;
-
 namespace LimitedStorage;
 
 public class LatencySimulator
 {
-    private const int BaseRPS = 10; // Base requests per second
-    private const int BaseLatencyMs = 100; // Base latency in milliseconds for 100 RPS
-    private const int MaxStoredRequests = 1000; // Maximum number of stored requests
-
-    private readonly ConcurrentQueue<DateTime> _requests = new();
-
+    private readonly ConcurrentQueue<DateTime> _lastRequests = new();
+    private const int BaseRps = 50; // Base requests per second
+    private const int BaseLatencyMs = 180; // Base latency in milliseconds for BaseRps
+    
     public TimeSpan GetAdjustedLatency()
     {
-        RemoveOutdatedRequests();
-        var currentRps = _requests.Count;
-        var rpsRatio = (double)currentRps / BaseRPS;
+        _lastRequests.Enqueue(DateTime.Now);
+        while(_lastRequests.TryPeek(out var request) && (DateTime.Now - request).TotalMilliseconds >=1000)
+        {
+            _lastRequests.TryDequeue(out _);
+        }
+
+        var rps = _lastRequests.Count(x => (DateTime.Now - x).TotalMilliseconds < 1000);
+        var rpsRatio = 1d*rps / BaseRps;
         var adjustedLatencyMs = BaseLatencyMs * rpsRatio;
+        Console.WriteLine($"RPS={rps} adjusted latency {adjustedLatencyMs}");
         return TimeSpan.FromMilliseconds(adjustedLatencyMs);
-    }
-
-    private void RemoveOutdatedRequests()
-    {
-        var cutoffTime = DateTime.Now.AddSeconds(-1);
-        while (_requests.TryPeek(out DateTime oldestRequest) && oldestRequest < cutoffTime)
-        {
-            _requests.TryDequeue(out _);
-        }
-
-        _requests.Enqueue(DateTime.Now);
-    }
-
-    public void AddRequest()
-    {
-        // Enforce a limit on the number of stored requests
-        while (_requests.Count >= MaxStoredRequests)
-        {
-            _requests.TryDequeue(out _);
-        }
-
-        // Add the current time to the request times queue
-        _requests.Enqueue(DateTime.Now);
     }
 }

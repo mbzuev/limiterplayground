@@ -6,13 +6,10 @@ namespace LimitedStorage.Controllers;
 [Route("[controller]")]
 public class SimulatedStorageController : ControllerBase
 {
-
-    private readonly ILogger<SimulatedStorageController> _logger;
     private readonly LatencySimulator _simulator;
 
-    public SimulatedStorageController(ILogger<SimulatedStorageController> logger, LatencySimulator simulator)
+    public SimulatedStorageController(LatencySimulator simulator)
     {
-        _logger = logger;
         _simulator = simulator;
     }
 
@@ -20,7 +17,6 @@ public class SimulatedStorageController : ControllerBase
     public async Task<ActionResult> GetData()
     {
         var latency = _simulator.GetAdjustedLatency();
-        Console.WriteLine($"Latency simulated={latency}");
         await Task.Delay(latency);
         return Ok("Here you go");
     }

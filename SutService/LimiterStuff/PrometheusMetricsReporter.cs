@@ -13,20 +13,38 @@ public class DefaultPrometheusMetricsReporter : IStorageMetrics
         "reco_cassandra_concurrent_request_limit",
         "Limit for concurrent requests to cassandra");
 
-    private static readonly Gauge _queueGauge = Metrics.CreateGauge(
+    private static readonly Gauge QueueGauge = Metrics.CreateGauge(
         "reco_cassandra_queue",
         "Queue for cassandra requests");
 
-    private static readonly Histogram _storageReadHistogram = Metrics.CreateHistogram(
-        "reco_cassandra_read_seconds",
-        "Histogram of getting recommendation from cassandra");
+    private static readonly Histogram StorageCallHistogram = Metrics.CreateHistogram(
+        "storage_call_seconds",
+        "Histogram of writing data to storage", new HistogramConfiguration()
+        {
+            Buckets = new[]
+            {
+                0.1,
+                0.125, 
+                0.150, 
+                0.175, 
+                0.200, 
+                0.205, 
+                0.210, 
+                0.215, 
+                0.220, 
+                0.270, 
+                0.340, 
+                0.410, 
+                0.500, 
+                0.600, 
+                0.700, 
+                0.800, 
+                0.900, 
+                1.0,
+            }
+        });
 
-    private static readonly Histogram _storageWriteHistogram = Metrics.CreateHistogram(
-        "reco_cassandra_write_seconds",
-        "Histogram of writing recommendation to cassandra",
-        labelNames: new[] { MetricsLabels.TenantId, MetricsLabels.Algorithm, MetricsLabels.InstanceId });
-
-    public ITimer MeasureStorageRead() => _storageReadHistogram.NewTimer();
+    public ITimer MeasureStorageCall() => StorageCallHistogram.NewTimer();
 
     public void IncRequests() => _concurrentRequestGauge.Inc();
 
@@ -36,20 +54,7 @@ public class DefaultPrometheusMetricsReporter : IStorageMetrics
 
     int IStorageMetrics.GetStorageRequests() => (int)_concurrentRequestGauge.Value;
 
-    public ITimer MeasureStorageWrite(string tenant, string recoTypeSystemName, string instanceId) =>
-        _storageWriteHistogram.WithLabels(tenant, recoTypeSystemName, instanceId).NewTimer();
-
-    public void UpdateQueueSize(long value) => _queueGauge.Set(value);
+    public void UpdateQueueSize(long value) => QueueGauge.Set(value);
 
     public void UpdateConcurrentRequestLimit(long value) => _concurrentRequestLimitGauge.Set(value);
-
-    private static void IncForTenant(Counter counter, string tenantId)
-    {
-        if (counter == null)
-            throw new ArgumentNullException(nameof(counter));
-        if (string.IsNullOrWhiteSpace(tenantId))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(tenantId));
-
-        counter.WithLabels(tenantId).Inc();
-    }
 }

@@ -45,7 +45,7 @@
     ports:
       - "80"
     deploy:
-      replicas: 7
+      replicas: 1
       
   nginx:
     image: nginx

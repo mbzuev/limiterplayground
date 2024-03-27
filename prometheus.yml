@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 5s
 
 scrape_configs:
   - job_name: 'sutservice'
@@ -13,7 +13,7 @@ scrape_configs:
   - job_name: 'mystorage'
     dns_sd_configs:
       - names:
-          - mystorage 
+          - mystorage
         type: A
         port: 80
         refresh_interval: 5s

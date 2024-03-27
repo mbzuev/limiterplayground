@@ -5,62 +5,64 @@ namespace SutService.LimiterStuff;
 
 public interface IConcurrencyLimitCalculator
 {
-	int Calculate(TimeSpan roundTimeTrip, int currentLimit, int inFlightRequests);
+    int Calculate(TimeSpan roundTimeTrip, int currentLimit, int inFlightRequests);
 }
 
 public class AimdConcurrencyLimitCalculator : IConcurrencyLimitCalculator
 {
-	private readonly AimdConcurrencyLimitSettings _settings;
+    private readonly AimdConcurrencyLimitSettings _settings;
+    private readonly TimeSpan _maxLatency;
+    private readonly ConcurrentQueue<TimeSpan> _lastRequests = new();
 
-	private readonly TimeSpan _maxLatency;
+    public AimdConcurrencyLimitCalculator(IOptions<AimdConcurrencyLimitSettings> options)
+    {
+        _settings = options.Value;
+        _maxLatency = TimeSpan.FromMilliseconds(_settings.MaxLatencyMilliseconds);
+    }
 
-	private readonly ConcurrentQueue<TimeSpan> _lastRequests = new();
+    public int Calculate(TimeSpan roundTimeTrip, int currentLimit, int inFlightRequests)
+    {
+        _lastRequests.Enqueue(roundTimeTrip);
+        var requests = GetRequestTimes();
+        if (requests.Length == 0)
+            return currentLimit;
 
-	
-	public AimdConcurrencyLimitCalculator(IOptions<AimdConcurrencyLimitSettings> options)
-	{
-		_settings = options.Value;
-		_maxLatency = TimeSpan.FromMilliseconds(_settings.MaxLatencyMilliseconds);
-	}
+        var percentileLatency = CalculatePercentileLatency(requests, _settings.TargetPercentile);
+        var newLimit = currentLimit;
+        if (percentileLatency > _maxLatency)
+            newLimit = (int)(1d * _settings.BackoffRatio * newLimit);
+        else if (CorrectlyUtilized(currentLimit, inFlightRequests))
+            newLimit++;
+        Console.WriteLine($"Limit - {currentLimit} slowest {percentileLatency} newLimit {newLimit}");
 
-	public int Calculate(TimeSpan roundTimeTrip, int currentLimit, int inFlightRequests)
-	{
-		_lastRequests.Enqueue(roundTimeTrip);
-		TimeSpan[] requests = Array.Empty<TimeSpan>();
-		if (_lastRequests.Count >= _settings.RecalculationRequestCount)
-		{
-			requests = _lastRequests.ToArray();
-			_lastRequests.Clear();
-		}
-		if (requests.Length == 0)
-			return currentLimit;
+        var result = Math.Min(_settings.MaxConcurrency, Math.Max(newLimit, _settings.MinConcurrency));
+        return result;
+    }
 
-		var percentile = CalculatePercentile(requests, _settings.TargetPercentile);
-		var newLimit = currentLimit;
-		if (percentile > _maxLatency)
-		{
-			newLimit = (int)(_settings.BackoffRatio * newLimit);
-		}
-		else if (CorrectlyUtilized(currentLimit, inFlightRequests))
-			newLimit++;
+    private TimeSpan[] GetRequestTimes()
+    {
+        var requests = Array.Empty<TimeSpan>();
+        if (_lastRequests.Count >= _settings.RecalculationRequestCount)
+        {
+            requests = _lastRequests.ToArray();
+            _lastRequests.Clear();
+        }
 
-		Console.WriteLine($"percentile {_settings.TargetPercentile}: {percentile}. New limit={newLimit}");
-		var result =  Math.Min(_settings.MaxConcurrency, Math.Max(newLimit, _settings.MinConcurrency));
-		return result;
-	}
+        return requests;
+    }
 
-	private static TimeSpan CalculatePercentile(TimeSpan[] timeSpans, int percentile)
-	{
-		if (timeSpans == null || timeSpans.Length == 0)
-			throw new ArgumentException("Input array cannot be null or empty.");
+    private static TimeSpan CalculatePercentileLatency(TimeSpan[] timeSpans, int percentile)
+    {
+        if (timeSpans == null || timeSpans.Length == 0)
+            throw new ArgumentException("Input array cannot be null or empty.");
 
-		Array.Sort(timeSpans);
-		var index = (int)Math.Ceiling(percentile/100d * timeSpans.Length) - 1;
-		return timeSpans[index];
-	}
+        Array.Sort(timeSpans);
+        var index = (int)Math.Ceiling(percentile * timeSpans.Length / 100d) - 1;
+        return timeSpans[index];
+    }
 
-	private static bool CorrectlyUtilized(int currentLimit, int inFlightRequests)
-	{
-		return inFlightRequests * 2 >= currentLimit;
-	}
+    private static bool CorrectlyUtilized(int currentLimit, int inFlightRequests)
+    {
+        return inFlightRequests * 2 + 1 >= currentLimit;
+    }
 }

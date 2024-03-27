@@ -1,4 +1,4 @@
-using SutService.LimiterStuff;
+namespace SutService.LimiterStuff;
 
 public abstract class ConcurrencyLimiterBase : IStorageConcurrencyLimiter
 {
@@ -9,24 +9,16 @@ public abstract class ConcurrencyLimiterBase : IStorageConcurrencyLimiter
         Metrics = metrics;
     }
 
-    public abstract Task<T> LimitReadAsync<T>(Func<Task<T>> reader);
-
-    public abstract Task LimitWriteAsync(Func<Task> writer);
+    public abstract Task<T> LimitCallAsync<T>(Func<Task<T>> reader);
 
     protected async Task<ReadResult<T>> ReadAndMeasureAsync<T>(Func<Task<T>> reader)
     {
-        using var timer = Metrics.MeasureStorageRead();
+        using var timer = Metrics.MeasureStorageCall();
         using var request = Metrics.RecordStorageRequest();
 
         var result = await reader().ConfigureAwait(false);
-        return new ReadResult<T>(result, timer.ObserveDuration());
-    }
-
-    protected async Task<OperationResult> WriteAndMeasureAsync(Func<Task> writer)
-    {
-        using var timer = Metrics.MeasureStorageWrite("", "", "");
-        await writer().ConfigureAwait(false);
-        return new OperationResult(timer.ObserveDuration());
+        var duration = timer.ObserveDuration();
+        return new ReadResult<T>(result, duration);
     }
 
     protected record OperationResult(TimeSpan Duration);
