@@ -2,10 +2,10 @@ global:
   scrape_interval: 5s
 
 scrape_configs:
-  - job_name: 'sutservice'
+  - job_name: 'limiterservice'
     dns_sd_configs:
       - names:
-          - sutservice  
+          - limiterservice  
         type: A
         port: 80
         refresh_interval: 5s

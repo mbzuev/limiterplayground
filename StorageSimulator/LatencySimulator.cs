@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
-namespace LimitedStorage;
+
+namespace StorageSimulator;
 
 public class LatencySimulator
 {

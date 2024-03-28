@@ -1,7 +1,5 @@
 using Prometheus;
 
-namespace SutService.LimiterStuff;
-
 public interface IStorageMetrics
 {
     ITimer MeasureStorageCall();

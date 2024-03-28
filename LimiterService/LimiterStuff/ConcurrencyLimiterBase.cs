@@ -1,4 +1,4 @@
-namespace SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public abstract class ConcurrencyLimiterBase : IStorageConcurrencyLimiter
 {

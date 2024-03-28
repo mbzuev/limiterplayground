@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using SutService.LimiterStuff;
+using LimiterService.LimiterStuff;
 
-namespace SutService.Controllers;
+namespace LimiterService.Controllers;
 
 [ApiController]
 [Route("[controller]")]

@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>SutService</RootNamespace>
+        <RootNamespace>LimiterService</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,4 +1,4 @@
-using SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public class ConcurrentRequestRecord : IDisposable
 {

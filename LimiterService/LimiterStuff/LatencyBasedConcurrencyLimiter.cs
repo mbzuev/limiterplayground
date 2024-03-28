@@ -2,7 +2,7 @@ using Polly;
 using Polly.Bulkhead;
 using Polly.Contrib.MutableBulkheadPolicy;
 
-namespace SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public class LatencyBasedConcurrencyLimiter : ConcurrencyLimiterBase
 {

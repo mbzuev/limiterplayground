@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace LimitedStorage.Controllers;
+namespace StorageSimulator.Controllers;
 
 [ApiController]
 [Route("[controller]")]

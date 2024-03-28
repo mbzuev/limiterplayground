@@ -1,8 +1,6 @@
-
-
 using System.ComponentModel.DataAnnotations;
 
-namespace SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public class AimdConcurrencyLimitSettings : ConcurrencyLimitSettings
 {

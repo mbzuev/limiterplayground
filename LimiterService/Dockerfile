@@ -5,16 +5,16 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["SutService/SutService.csproj", "SutService/"]
-RUN dotnet restore "SutService/SutService.csproj"
+COPY ["LimiterService/LimiterService.csproj", "LimiterService/"]
+RUN dotnet restore "LimiterService/LimiterService.csproj"
 COPY . .
-WORKDIR "/src/SutService"
-RUN dotnet build "SutService.csproj" -c Release -o /app/build
+WORKDIR "/src/LimiterService"
+RUN dotnet build "LimiterService.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "SutService.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "LimiterService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SutService.dll"]
+ENTRYPOINT ["dotnet", "LimiterService.dll"]

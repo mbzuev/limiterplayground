@@ -1,6 +1,4 @@
-namespace SutService.LimiterStuff;
-
-using System;
+using LimiterService.LimiterStuff;
 using Prometheus;
 
 public class DefaultPrometheusMetricsReporter : IStorageMetrics

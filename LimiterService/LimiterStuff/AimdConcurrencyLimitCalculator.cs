@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 
-namespace SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public interface IConcurrencyLimitCalculator
 {

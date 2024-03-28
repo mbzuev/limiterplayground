@@ -1,5 +1,5 @@
 using Prometheus;
-using SutService.LimiterStuff;
+using LimiterService.LimiterStuff;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using Polly.Contrib.MutableBulkheadPolicy;
 using Polly.Registry;
 
-namespace SutService.LimiterStuff;
+namespace LimiterService.LimiterStuff;
 
 public enum RequestType
 {
